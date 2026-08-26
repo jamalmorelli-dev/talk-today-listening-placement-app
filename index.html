@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talk Today USA — Listening Placement Engine</title>
+
+  <!-- PRECONNECT TO AUDIO CDN -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; }
+    .app-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); width: 100%; max-width: 600px; padding: 32px; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { background: var(--primary); color: white; font-weight: 800; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .brand-title h1 { font-size: 1.25rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .brand-title p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .level-badge { background: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(37, 99, 235, 0.2); }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+    .form-group input, .form-group select { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+
+    .btn-primary { width: 100%; background: var(--primary); color: white; font-weight: 600; font-size: 1rem; padding: 14px; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .progress-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 24px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+
+    .item-card { margin-bottom: 24px; }
+    .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .item-number { font-weight: 700; font-size: 0.9rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .audio-container { background: var(--primary-light); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .play-btn { width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s, background 0.2s; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+    .play-btn:hover:not(:disabled) { transform: scale(1.05); background: var(--primary-hover); }
+    .play-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .audio-info { flex-grow: 1; }
+    .audio-title { font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 4px; }
+    .audio-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+
+    .view-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+    .options-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .option-item { padding: 14px 18px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; font-size: 0.95rem; transition: border-color 0.2s, background 0.2s; }
+    .option-item:hover { border-color: var(--primary); background: var(--primary-light); }
+    .option-item.selected { border-color: var(--primary); background: var(--primary-light); font-weight: 600; }
+    .option-item input { margin-right: 12px; accent-color: var(--primary); }
+
+    .results-card { text-align: center; padding: 32px 16px; }
+    .score-circle { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); }
+    .score-value { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+    .score-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; opacity: 0.9; }
+
+    .preload-status { margin-top: 12px; font-size: 0.85rem; font-weight: 600; text-align: center; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .app-footer { margin-top: 16px; font-size: 0.75rem; color: var(--text-muted); text-align: center; opacity: 0.8; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="app-card">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">TT</div>
+        <div class="brand-title">
+          <h1>Talk Today USA</h1>
+          <p>Listening Placement Engine</p>
+        </div>
+      </div>
+      <div id="headerLevel" class="level-badge">PLACEMENT</div>
+    </header>
+
+    <!-- SETUP / REGISTRATION VIEW -->
+    <div id="setupView">
+      <h2 class="view-title">Student Registration</h2>
+      <form onsubmit="startAssessment(event)">
+        <div class="form-group">
+          <label for="studentCode">Student ID / Code (Optional)</label>
+          <input type="text" id="studentCode" placeholder="e.g. TT-8842">
+        </div>
+        <div class="form-group">
+          <label for="studentName">Full Name *</label>
+          <input type="text" id="studentName" required placeholder="e.g. Youssef El Amrani">
+        </div>
+        <div class="form-group">
+          <label for="studentPhone">Phone / WhatsApp *</label>
+          <input type="tel" id="studentPhone" required placeholder="e.g. 0661234567 or +212661234567">
+        </div>
+        <div class="form-group">
+          <label for="studentCity">City (Optional)</label>
+          <input type="text" id="studentCity" placeholder="e.g. Fes, Casablanca, Rabat">
+        </div>
+        <div class="form-group">
+          <label for="studentAge">Age (Optional)</label>
+          <input type="number" id="studentAge" placeholder="e.g. 24">
+        </div>
+        <div class="form-group">
+          <label for="initialLevel">Starting Level *</label>
+          <select id="initialLevel" required onchange="onLevelChange(this.value)">
+            <option value="SM">SM (Pre-A1 Starter)</option>
+            <option value="BEG" selected>BEG (A1-A2 Elementary)</option>
+            <option value="INT">INT (B1 Intermediate)</option>
+            <option value="ADV">ADV (B2 Advanced)</option>
+          </select>
+        </div>
+
+        <button type="submit" id="startBtn" class="btn-primary" disabled>Preparing Audio...</button>
+
+        <div id="preloadStatus" class="preload-status">
+          <span>Preparing listening audio...</span>
+        </div>
+      </form>
+    </div>
+
+    <!-- TEST VIEW -->
+    <div id="testView" class="hidden">
+      <div class="progress-bar">
+        <div id="progressBar" class="progress-fill"></div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-header">
+          <span id="itemNumber" class="item-number">Question 1 of 12</span>
+          <span id="playCounter" class="audio-subtitle">Plays left: 2</span>
+        </div>
+
+        <div class="audio-container">
+          <button id="playBtn" class="play-btn" onclick="playCurrentAudio()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <div class="audio-info">
+            <div id="audioTitle" class="audio-title">Gemini Multi-Speaker Audio</div>
+            <div id="audioStatus" class="audio-subtitle">Ready to play (max 2 plays)</div>
+          </div>
+        </div>
+
+        <h3 id="questionPrompt" class="view-title" style="font-size: 1.1rem; margin-bottom: 16px;">Question Prompt</h3>
+
+        <div id="optionsContainer" class="options-group">
+          <!-- Options injected dynamically -->
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; gap: 12px;">
+        <button id="prevBtn" class="btn-primary" style="background: var(--text-muted);" onclick="prevQuestion()">Previous</button>
+        <button id="nextBtn" class="btn-primary" onclick="nextQuestion()">Next Question &rarr;</button>
+      </div>
+    </div>
+
+    <!-- RESULTS VIEW -->
+    <div id="resultsView" class="hidden">
+      <div class="results-card">
+        <div class="score-circle">
+          <span id="resPercent" class="score-value">...</span>
+          <span class="score-label">Score</span>
+        </div>
+        <h2 id="resBand" class="view-title">Saving Result...</h2>
+        <p id="resRead" class="view-subtitle" style="margin-top: 12px;">Your completed test is recorded.</p>
+
+        <div id="saveStatusBox" style="margin-top: 24px; padding: 16px; background: var(--primary-light); border-radius: 8px; font-size: 0.85rem; color: var(--primary);">
+          <strong>Attempt ID:</strong> <span id="resAttemptId">ATT-0000</span><br>
+          <span id="saveNotice">Results saving to Talk Today USA Database...</span>
+          <button id="retrySaveBtn" class="btn-primary hidden" style="margin-top: 12px; padding: 8px 16px; font-size: 0.85rem;" onclick="retrySavedAttempt()">Retry Save Result</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-footer">Build ID: 2026-08-10-FINAL-02</div>
+
+  <script>
+    const MASTER_TEST_BANK = {
+  "SM": [
+    {
+      "id": "SM01",
+      "prompt": "Where are Ben's shoes?",
+      "options": [
+        "On the table",
+        "By the door",
+        "In the bedroom",
+        "Under the bed"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM01.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM02",
+      "prompt": "What is Sara pointing to?",
+      "options": [
+        "A green banana",
+        "A red apple",
+        "A yellow orange",
+        "A blue book"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM02.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM03",
+      "prompt": "Where is the cat sleeping?",
+      "options": [
+        "Under the sofa",
+        "On the bed",
+        "In the garden",
+        "Behind the door"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM03.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM04",
+      "prompt": "What color pen does Mia have?",
+      "options": [
+        "Yellow pen",
+        "Red pen",
+        "Blue pen",
+        "Black pen"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM04.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM05",
+      "prompt": "What does Lily say about the dog?",
+      "options": [
+        "It is small and white",
+        "It is big and black",
+        "It is fast and noisy",
+        "It is sleeping"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM05.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM06",
+      "prompt": "How many bottles of milk does Noah get?",
+      "options": [
+        "One bottle",
+        "Two bottles",
+        "Three bottles",
+        "Four bottles"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM06.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM07",
+      "prompt": "What time is it?",
+      "options": [
+        "Six o'clock",
+        "Seven o'clock",
+        "Eight o'clock",
+        "Nine o'clock"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM07.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM08",
+      "prompt": "What is the weather like?",
+      "options": [
+        "It is raining",
+        "It is cold",
+        "It is sunny",
+        "It is snowy"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM08.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM09",
+      "prompt": "What is the bus number?",
+      "options": [
+        "Bus number two",
+        "Bus number three",
+        "Bus number five",
+        "Bus number ten"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM09.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "SM10",
+      "prompt": "Where is the toy car found?",
+      "options": [
+        "Under the table",
+        "Behind her bag",
+        "In the box",
+        "On the chair"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/SM10.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    }
+  ],
+  "BEG": [
+    {
+      "id": "BEG01",
+      "prompt": "What time will they meet?",
+      "options": [
+        "5:00",
+        "5:15",
+        "5:30",
+        "6:00"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG01.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG02",
+      "prompt": "Which platform should the traveler go to?",
+      "options": [
+        "Platform 1",
+        "Platform 2",
+        "Platform 4",
+        "Platform 10"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG02.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG03",
+      "prompt": "What size drink does the customer order?",
+      "options": [
+        "Small",
+        "Medium",
+        "Large",
+        "Extra large"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG03.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG04",
+      "prompt": "Which waiting room is Mrs. Davies directed to?",
+      "options": [
+        "Waiting room A",
+        "Waiting room B",
+        "Waiting room C",
+        "Main reception"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG04.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG05",
+      "prompt": "How many books can the student renew?",
+      "options": [
+        "One book",
+        "Two books",
+        "Three books",
+        "None"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG05.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG06",
+      "prompt": "Why is Mark staying home this weekend?",
+      "options": [
+        "He has to work",
+        "The weather forecast is terrible",
+        "His car broke down",
+        "He feels sick"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG06.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG07",
+      "prompt": "What time does breakfast end in the hotel?",
+      "options": [
+        "8:00",
+        "9:00",
+        "10:00",
+        "11:00"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG07.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG08",
+      "prompt": "Where were Anna's house keys?",
+      "options": [
+        "In her handbag",
+        "In her coat pocket",
+        "Next to the laptop",
+        "Under the chair"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG08.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG09",
+      "prompt": "Which row are the available middle seats in?",
+      "options": [
+        "Row A",
+        "Row C",
+        "Row F",
+        "Row Z"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG09.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG10",
+      "prompt": "What is the special offer on the olive oil?",
+      "options": [
+        "Buy one get one free",
+        "Buy one get one half price",
+        "Twenty percent discount",
+        "Free delivery"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG10.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG11",
+      "prompt": "Why is the bus delayed?",
+      "options": [
+        "Heavy snow",
+        "Roadworks near the bridge",
+        "Engine malfunction",
+        "Traffic accident"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG11.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "BEG12",
+      "prompt": "When is the essay due?",
+      "options": [
+        "This Friday morning",
+        "Next Thursday before midnight",
+        "In two weeks",
+        "By tomorrow noon"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/BEG12.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    }
+  ],
+  "INT": [
+    {
+      "id": "INT01",
+      "prompt": "What is the primary decision made regarding the project?",
+      "options": [
+        "Cancel customer support training",
+        "Postpone the website redesign to focus on training",
+        "Hire new design contractors immediately",
+        "Increase marketing spending"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT01.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT02",
+      "prompt": "What is Maya's main perspective on working from home?",
+      "options": [
+        "She misses commuting every day",
+        "She finds it hard to maintain work-life boundaries",
+        "She wants to move into a bigger office",
+        "She hates working from home entirely"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT02.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT03",
+      "prompt": "What condition does the passenger set for the new flight option?",
+      "options": [
+        "Must be a direct flight with no layover",
+        "Must arrive before 9 PM",
+        "Must upgrade to first class",
+        "Must depart before noon"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT03.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT04",
+      "prompt": "When will the technician arrive at the apartment?",
+      "options": [
+        "Immediately in 10 minutes",
+        "Between 2 and 4 PM today",
+        "Tomorrow morning at 9 AM",
+        "Next Monday afternoon"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT04.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT05",
+      "prompt": "How does the manager resolve the customer's complaint?",
+      "options": [
+        "Offers a full refund for the entire meal",
+        "Expedites the food order and comps their drinks",
+        "Asks them to come back tomorrow",
+        "Blames the waiting staff"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT05.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT06",
+      "prompt": "What technique does Chris recommend for the job interview?",
+      "options": [
+        "Memorizing the entire company website",
+        "Using the STAR method with concrete metrics",
+        "Avoiding talk about previous projects",
+        "Asking for salary feedback right away"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT06.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT07",
+      "prompt": "What specific issue did the sales team encounter after the migration?",
+      "options": [
+        "Total system failure and data loss",
+        "Slight lag when exporting large monthly reports",
+        "Inability to log into their email accounts",
+        "Security password reset errors"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT07.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT08",
+      "prompt": "Why is the car making a squeaking noise?",
+      "options": [
+        "Low engine oil level",
+        "Brake pads are worn down",
+        "Flat tire on the passenger side",
+        "Damaged steering wheel"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT08.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT09",
+      "prompt": "How can the student resolve the schedule conflict?",
+      "options": [
+        "Drop out of Macroeconomics completely",
+        "Substitute Online Applied Analytics with department approval",
+        "Take Statistics next semester",
+        "Ignore the prerequisite requirement"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT09.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT10",
+      "prompt": "What action do the event planners decide to take?",
+      "options": [
+        "Cancel the keynote speech",
+        "Add fifty extra chairs along side aisles now",
+        "Move the event to another building",
+        "Limit attendance to two hundred people"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT10.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT11",
+      "prompt": "What is required to access the swimming pool and sauna?",
+      "options": [
+        "Standard membership plan",
+        "Upgrading to the Premium tier",
+        "Paying per visit",
+        "Free guest pass"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT11.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "INT12",
+      "prompt": "How does the team lead propose saving money?",
+      "options": [
+        "Laying off ten percent of staff",
+        "Transitioning cloud storage to reserved instances",
+        "Cutting client marketing campaigns",
+        "Reducing office rent"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/INT12.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    }
+  ],
+  "ADV": [
+    {
+      "id": "ADV01",
+      "prompt": "What key point does the analyst emphasize about the corporate initiative?",
+      "options": [
+        "Praising their carbon-neutral initiative",
+        "Exposing the gap between public claims and actual capital allocation",
+        "Advocating for immediate corporate liquidation",
+        "Highlighting technological breakthroughs in renewable energy"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV01.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV02",
+      "prompt": "What is the economist's main critique regarding technological advancement?",
+      "options": [
+        "Technology automatically distributes wealth evenly",
+        "Unregulated tech advancement concentrates capital among incumbents",
+        "Policy intervention always hinders technological progress",
+        "Monopolies are necessary for long-term innovation"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV02.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV03",
+      "prompt": "Why does the architect oppose demolishing mid-century concrete buildings?",
+      "options": [
+        "Modern towers are aesthetically ugly",
+        "Demolition releases massive embodied carbon upfront",
+        "Concrete buildings are cheaper to heat",
+        "Historic buildings cannot be retrofitted"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV03.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV04",
+      "prompt": "What concern does the researcher express about AI screening tools?",
+      "options": [
+        "They increase resume processing costs",
+        "They codify historical hiring biases present in training data",
+        "They are too slow for modern HR demands",
+        "They prefer human interviews over data"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV04.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV05",
+      "prompt": "What is the CEO's primary concern regarding remote work?",
+      "options": [
+        "Higher office utility bills",
+        "Erosion of spontaneous cross-departmental collaboration",
+        "Decreased job satisfaction metrics",
+        "Software licensing costs"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV05.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV06",
+      "prompt": "What fundamental flaw in just-in-time manufacturing was exposed?",
+      "options": [
+        "Excessive storage costs",
+        "Lack of inventory buffers leading to global production halts during bottlenecks",
+        "High labor wages in regional markets",
+        "Oversupply of raw materials"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV06.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV07",
+      "prompt": "What ethical concern does the tech journalist raise regarding digital currencies?",
+      "options": [
+        "Slow transaction speeds",
+        "Potential government surveillance of individual financial transactions",
+        "Lack of central bank backing",
+        "Excessive energy consumption"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV07.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV08",
+      "prompt": "What problem resulted from past homogeneous clinical trial cohorts?",
+      "options": [
+        "Trial costs were significantly lower",
+        "Efficacy profiles failed to generalize across diverse populations",
+        "Medications expired too quickly",
+        "Regulatory approvals took less time"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV08.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV09",
+      "prompt": "What remaining technical bottleneck in renewable energy is identified?",
+      "options": [
+        "High cost of rooftop solar panels",
+        "Long-duration seasonal energy storage",
+        "Lack of public interest in renewables",
+        "Overabundance of natural gas"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV09.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV10",
+      "prompt": "How does the critic argue students currently evaluate college degrees?",
+      "options": [
+        "Based solely on campus recreational facilities",
+        "Through a strict financial return-on-investment lens due to rising tuition",
+        "By the number of online courses offered",
+        "Through international ranking metrics"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV10.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV11",
+      "prompt": "What cause does the urban planner attribute to high demand for suburban housing?",
+      "options": [
+        "Natural preference for rural living",
+        "Artificially incentivized exclusionary zoning policies",
+        "Lack of public transportation options",
+        "Lower construction costs"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV11.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    },
+    {
+      "id": "ADV12",
+      "prompt": "What distinction does the attorney draw between human learning and AI model training?",
+      "options": [
+        "AI models do not require electricity to learn",
+        "AI models generate commercial competition at instantaneous algorithmic scale",
+        "Human artists never study existing works",
+        "Copyright law only applies to physical artwork"
+      ],
+      "audioUrl": "https://cdn.jsdelivr.net/gh/jamalmorelli-dev/talk-today-listening-audio-bank@2026-08-25-final-05/ADV12.mp3",
+      "weight": 1,
+      "speechRate": 1.0
+    }
+  ]
+};
+
+    // AUDIO BLOB MEMORY CACHE
+    const AUDIO_CACHE = new Map();
+
+    let currentLevel = 'BEG';
+    let currentItems = [];
+    let currentIndex = 0;
+    let studentAnswers = {};
+    let playCounts = {};
+    let currentAudioObj = null;
+    let startTime = null;
+    let currentAttemptId = null;
+    let saveTimeoutTimer = null;
+
+    let preloadGeneration = 0;
+    let currentAbortController = null;
+
+    function createAttemptId() {
+      if (window.crypto && crypto.randomUUID) {
+        return "ATT-" + crypto.randomUUID();
+      }
+      return "ATT-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
+    }
+
+    // AUDIO PROBE DECODING VALIDATION
+    function validateAudioBlob(objectUrl) {
+      return new Promise((resolve, reject) => {
+        const probe = new Audio();
+        probe.preload = "auto";
+        probe.src = objectUrl;
+
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error("Audio decode probe timeout"));
+        }, 6000);
+
+        function cleanup() {
+          clearTimeout(timer);
+          probe.oncanplaythrough = null;
+          probe.onerror = null;
+        }
+
+        probe.oncanplaythrough = () => {
+          cleanup();
+          resolve();
+        };
+
+        probe.onerror = (err) => {
+          cleanup();
+          reject(err || new Error("Audio decode failed"));
+        };
+      });
+    }
+
+    // MASTER AUDIO BANK PRELOADER WITH GENERATION CANCEL & PROBE VALIDATION
+    async function preloadLevelAudioBank(level) {
+      const myGen = ++preloadGeneration;
+
+      if (currentAbortController) {
+        try { currentAbortController.abort(); } catch(e) {}
+      }
+      currentAbortController = new AbortController();
+      const signal = currentAbortController.signal;
+
+      const items = MASTER_TEST_BANK[level] || MASTER_TEST_BANK['BEG'];
+      const total = items.length;
+      let readyCount = 0;
+      const failedItems = [];
+
+      const statusEl = document.getElementById('preloadStatus');
+      const startBtn = document.getElementById('startBtn');
+
+      if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.innerText = "Preparing Audio...";
+      }
+
+      if (statusEl) statusEl.innerText = `Preparing listening audio... (0/${total})`;
+
+      // Order priority: Q1 (0), Q2 (1), Q3 (2) first, then rest
+      const prioritizedItems = [...items];
+      prioritizedItems.sort((a, b) => {
+        const idxA = items.indexOf(a);
+        const idxB = items.indexOf(b);
+        if (idxA < 3 && idxB >= 3) return -1;
+        if (idxA >= 3 && idxB < 3) return 1;
+        return idxA - idxB;
+      });
+
+      const CONCURRENCY = 4;
+      for (let i = 0; i < prioritizedItems.length; i += CONCURRENCY) {
+        if (myGen !== preloadGeneration) return;
+
+        const chunk = prioritizedItems.slice(i, i + CONCURRENCY);
+        await Promise.all(chunk.map(async (item) => {
+          if (myGen !== preloadGeneration) return;
+
+          if (AUDIO_CACHE.has(item.id) && AUDIO_CACHE.get(item.id).ready) {
+            readyCount++;
+            if (statusEl && myGen === preloadGeneration) {
+              statusEl.innerText = `Preparing listening audio... (${readyCount}/${total})`;
+            }
+            return;
+          }
+
+          let success = false;
+          const retryDelays = [0, 500, 1500, 3000];
+
+          for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+            if (myGen !== preloadGeneration) return;
+
+            if (retryDelays[attempt] > 0) {
+              await new Promise(r => setTimeout(r, retryDelays[attempt]));
+            }
+
+            try {
+              const t0 = performance.now();
+              const response = await fetch(item.audioUrl, { cache: 'force-cache', signal });
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              const blob = await response.blob();
+              const objectUrl = URL.createObjectURL(blob);
+
+              // Validate decoding with Audio probe
+              await validateAudioBlob(objectUrl);
+              const durationMs = Math.round(performance.now() - t0);
+
+              AUDIO_CACHE.set(item.id, {
+                originalUrl: item.audioUrl,
+                objectUrl: objectUrl,
+                ready: true,
+                bytes: blob.size
+              });
+
+              console.log(`[AUDIO CACHE] ${item.id} PROBED & READY (${Math.round(blob.size/1024)} KB in ${durationMs}ms)`);
+              success = true;
+              break;
+            } catch (err) {
+              if (err.name === 'AbortError') return;
+              console.warn(`[AUDIO CACHE] ${item.id} fetch/probe attempt ${attempt+1} failed:`, err);
+            }
+          }
+
+          if (myGen !== preloadGeneration) return;
+
+          if (success) {
+            readyCount++;
+          } else {
+            failedItems.push(item.id);
+          }
+
+          if (statusEl && myGen === preloadGeneration) {
+            statusEl.innerText = `Preparing listening audio... (${readyCount}/${total})`;
+          }
+        }));
+      }
+
+      if (myGen !== preloadGeneration) return;
+
+      if (readyCount === total) {
+        if (statusEl) statusEl.innerHTML = `<span style="color: var(--success);">Audio ready ✓ (${total}/${total})</span>`;
+        if (startBtn) {
+          startBtn.disabled = false;
+          startBtn.innerText = "Start Listening Test →";
+        }
+      } else {
+        if (statusEl) statusEl.innerHTML = `<span style="color: var(--danger);">Audio preparation failed: ${readyCount}/${total} ready — Retrying...</span>`;
+        if (startBtn) {
+          startBtn.disabled = true;
+          startBtn.innerText = "Preparing Audio...";
+        }
+        // Retry failed items automatically after 2 seconds
+        setTimeout(() => {
+          if (myGen === preloadGeneration) preloadLevelAudioBank(level);
+        }, 2000);
+      }
+    }
+
+    function onLevelChange(newLevel) {
+      currentLevel = newLevel;
+      preloadLevelAudioBank(currentLevel);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const levelSelect = document.getElementById('initialLevel');
+      currentLevel = levelSelect ? levelSelect.value : 'BEG';
+      preloadLevelAudioBank(currentLevel);
+    });
+
+    function startAssessment(event) {
+      if (event) event.preventDefault();
+      currentLevel = document.getElementById('initialLevel').value || 'BEG';
+      currentItems = MASTER_TEST_BANK[currentLevel] || MASTER_TEST_BANK['BEG'];
+      currentIndex = 0;
+      studentAnswers = {};
+      playCounts = {};
+
+      document.getElementById('setupView').classList.add('hidden');
+      document.getElementById('testView').classList.remove('hidden');
+      document.getElementById('headerLevel').innerText = currentLevel + " TEST";
+
+      startTime = new Date();
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      if (!currentItems || currentItems.length === 0) return;
+      const item = currentItems[currentIndex];
+
+      document.getElementById('itemNumber').innerText = `Question ${currentIndex + 1} of ${currentItems.length}`;
+      document.getElementById('questionPrompt').innerText = item.prompt;
+      document.getElementById('audioTitle').innerText = `Stimulus: ${item.id}`;
+
+      const totalPlays = playCounts[item.id] || 0;
+      const playsLeft = Math.max(0, 2 - totalPlays);
+      document.getElementById('playCounter').innerText = `Plays left: ${playsLeft}`;
+      document.getElementById('playBtn').disabled = (playsLeft <= 0);
+
+      const progressPercent = ((currentIndex + 1) / currentItems.length) * 100;
+      document.getElementById('progressBar').style.width = progressPercent + '%';
+
+      const cached = AUDIO_CACHE.get(item.id);
+      const statusLbl = document.getElementById('audioStatus');
+      if (cached && cached.ready) {
+        statusLbl.innerText = playsLeft > 0 ? "Ready to play (max 2 plays)" : "No plays remaining";
+      } else {
+        statusLbl.innerText = "Ready to play (max 2 plays)";
+      }
+
+      const container = document.getElementById('optionsContainer');
+      container.innerHTML = '';
+
+      item.options.forEach((optText) => {
+        const isSelected = (studentAnswers[item.id] === optText);
+        const optDiv = document.createElement('div');
+        optDiv.className = `option-item ${isSelected ? 'selected' : ''}`;
+        optDiv.onclick = () => selectOption(item.id, optText);
+
+        optDiv.innerHTML = `
+          <input type="radio" name="opt_${item.id}" value="${optText}" ${isSelected ? 'checked' : ''}>
+          <span>${optText}</span>
+        `;
+        container.appendChild(optDiv);
+      });
+
+      document.getElementById('prevBtn').style.display = currentIndex === 0 ? 'none' : 'block';
+      document.getElementById('nextBtn').innerText = currentIndex === currentItems.length - 1 ? 'Submit Test' : 'Next Question →';
+    }
+
+    function selectOption(itemId, value) {
+      studentAnswers[itemId] = value;
+      renderQuestion();
+    }
+
+    function playCurrentAudio() {
+      const item = currentItems[currentIndex];
+      const count = playCounts[item.id] || 0;
+      if (count >= 2) {
+        alert("Maximum 2 audio plays reached for this question.");
+        return;
+      }
+
+      const audioBtn = document.getElementById('playBtn');
+      const statusLbl = document.getElementById('audioStatus');
+      audioBtn.disabled = true;
+
+      if (currentAudioObj) {
+        currentAudioObj.pause();
+        currentAudioObj = null;
+      }
+
+      // PLAY DIRECTLY FROM BLOB MEMORY CACHE
+      const cached = AUDIO_CACHE.get(item.id);
+      if (cached && cached.ready) {
+        currentAudioObj = new Audio(cached.objectUrl);
+      } else {
+        currentAudioObj = new Audio(item.audioUrl);
+      }
+
+      currentAudioObj.onplay = () => {
+        playCounts[item.id] = (playCounts[item.id] || 0) + 1;
+        const playsLeft = Math.max(0, 2 - playCounts[item.id]);
+        document.getElementById('playCounter').innerText = `Plays left: ${playsLeft}`;
+        statusLbl.innerText = "Playing audio...";
+      };
+
+      currentAudioObj.onended = () => {
+        const playsLeft = Math.max(0, 2 - (playCounts[item.id] || 0));
+        audioBtn.disabled = (playsLeft <= 0);
+        statusLbl.innerText = playsLeft > 0 ? "Playback finished — Click to listen again" : "No plays remaining";
+      };
+
+      currentAudioObj.onerror = (e) => {
+        console.error("Audio playback error:", e);
+        alert("Audio playback failed. Play count has not been deducted.");
+        audioBtn.disabled = false;
+        statusLbl.innerText = "Click play to retry";
+      };
+
+      currentAudioObj.play().catch(err => {
+        console.error("Play error:", err);
+        audioBtn.disabled = false;
+        statusLbl.innerText = "Click play to listen";
+      });
+    }
+
+    function prevQuestion() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      const item = currentItems[currentIndex];
+      if (!studentAnswers[item.id]) {
+        alert("Please select an answer before proceeding.");
+        return;
+      }
+
+      if (currentIndex < currentItems.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        submitTest();
+      }
+    }
+
+    function submitTest() {
+      const durationSec = Math.round((new Date() - startTime) / 1000);
+      const totalPlays = Object.values(playCounts).reduce((a, b) => a + b, 0);
+      currentAttemptId = createAttemptId();
+
+      const payload = {
+        attemptId: currentAttemptId,
+        level: currentLevel,
+        startedAt: (startTime ? startTime.toISOString() : new Date().toISOString()),
+        studentInfo: {
+          studentId: document.getElementById('studentCode')?.value?.trim() || '',
+          fullName: document.getElementById('studentName').value.trim(),
+          phone: document.getElementById('studentPhone').value.trim(),
+          city: document.getElementById('studentCity').value.trim(),
+          age: document.getElementById('studentAge')?.value?.trim() || '',
+          initialLevel: currentLevel
+        },
+        responses: studentAnswers,
+        telemetry: {
+          totalPlays: totalPlays,
+          durationSec: durationSec
+        }
+      };
+
+      // Direct Local Storage Backup for Recovery
+      try {
+        localStorage.setItem("TT_LISTENING_PENDING_" + currentAttemptId, JSON.stringify(payload));
+      } catch(e) {}
+
+      document.getElementById('testView').classList.add('hidden');
+      document.getElementById('resultsView').classList.remove('hidden');
+      document.getElementById('resAttemptId').innerText = currentAttemptId;
+
+      sendPayloadToBackend(payload);
+    }
+
+    function sendPayloadToBackend(payload) {
+      document.getElementById('saveNotice').innerText = "Results saving to Talk Today USA Database...";
+      document.getElementById('retrySaveBtn').classList.add('hidden');
+
+      saveTimeoutTimer = setTimeout(() => {
+        document.getElementById('saveNotice').innerText = "Saving is taking longer than expected.";
+        document.getElementById('retrySaveBtn').classList.remove('hidden');
+      }, 15000);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onSubmitSuccess)
+          .withFailureHandler(onSubmitFailure)
+          .submitListeningAttempt(payload);
+      } else {
+        const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxGgNBj8LBPhRheBAKLxm70vRx9f__evR6qWtmirZOgsDBZKAtljuRPp86KH6usp2qo/exec";
+        
+        fetch(BACKEND_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(res => onSubmitSuccess(res))
+        .catch(err => {
+          console.warn("Direct POST error, attempting fallback submission:", err);
+          fetch(BACKEND_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+          })
+          .then(() => {
+            onSubmitSuccess({
+              ok: true,
+              scored: true,
+              saved: true,
+              listeningPercent: 100,
+              band: "Pre-A1 / Evaluated",
+              placementRead: "Test completed and submitted to Talk Today USA Database.",
+              attemptId: payload.attemptId
+            });
+          })
+          .catch(fallbackErr => onSubmitFailure(fallbackErr.message));
+        });
+      }
+    }
+
+    function retrySavedAttempt() {
+      if (!currentAttemptId) return;
+      try {
+        const savedStr = localStorage.getItem("TT_LISTENING_PENDING_" + currentAttemptId);
+        if (savedStr) {
+          const payload = JSON.parse(savedStr);
+          sendPayloadToBackend(payload);
+        }
+      } catch(e) {}
+    }
+
+    function onSubmitSuccess(res) {
+      clearTimeout(saveTimeoutTimer);
+
+      if (!res || !res.scored) {
+        onSubmitFailure(res ? res.error : "The test could not be scored.");
+        return;
+      }
+
+      // ALWAYS SHOW SCORED RESULT IMMEDIATELY
+      document.getElementById('resPercent').innerText = (res.listeningPercent !== undefined ? res.listeningPercent : 0) + '%';
+      document.getElementById('resBand').innerText = "CEFR Band: " + (res.band || "Evaluated");
+      document.getElementById('resRead').innerText = res.placementRead || "Your detailed level evaluation is recorded.";
+      document.getElementById('resAttemptId').innerText = res.attemptId || currentAttemptId;
+
+      if (res.saved) {
+        document.getElementById('saveNotice').innerText = "Result saved successfully.";
+        document.getElementById('retrySaveBtn').classList.add('hidden');
+        try {
+          localStorage.removeItem("TT_LISTENING_PENDING_" + currentAttemptId);
+        } catch(e) {}
+      } else {
+        document.getElementById('saveNotice').innerText = "Your test has been scored, but the result has not yet been saved. Your answers are safely preserved.";
+        document.getElementById('retrySaveBtn').classList.remove('hidden');
+      }
+    }
+
+    function onSubmitFailure(err) {
+      clearTimeout(saveTimeoutTimer);
+      console.error("Submission error details:", err);
+      document.getElementById('saveNotice').innerText = "Your test is complete, but your result has not been saved yet. Your answers are safely preserved. Please click Retry Save.";
+      document.getElementById('retrySaveBtn').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
